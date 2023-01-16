@@ -1,9 +1,13 @@
 package sg.edu.nus.iss;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.Console;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.FileSystems;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -58,6 +62,7 @@ public final class App {
                 }
 
                 case "list":
+                    cartItems = readCartItemsFromFile(dirPath, fileName);
                     listCart(cartItems);
                     break;
 
@@ -74,15 +79,28 @@ public final class App {
             if (input.startsWith("add")) {
 
                 input = input.replace(",", " ");
+
                 Scanner scanner = new Scanner(input.substring(4));
+                FileWriter fw = new FileWriter(dirPath + File.separator + fileName,true);
+                PrintWriter pw = new PrintWriter(fw);
+
                 while (scanner.hasNext()) {
                     strValue = scanner.next();
                     cartItems.add(strValue);
+
+                    pw.printf("%s\n",strValue);
+                    pw.flush();
+                    fw.flush();
                 }
+
+                pw.close();
+                fw.close();
+
             }
 
             if (input.startsWith("delete")) {
                 cartItems = deleteCartItem(cartItems, input);
+                updateCartItemToFIle(cartItems, dirPath, fileName);
             }
 
             if(input.startsWith("login")){
@@ -98,9 +116,13 @@ public final class App {
 
                 if (isCreated){
                     displayMessage("New file created successfully" + loginFile.getCanonicalFile());
+
                 }else{
                     displayMessage("File already created");
                 }
+
+                fileName = loginFile.getName();  // try get Path if does work
+
 
             }
 
@@ -126,6 +148,20 @@ public final class App {
         }
     }
 
+    public static List<String> readCartItemsFromFile(String dirPath, String fileName) throws IOException{
+
+        List<String> items = new ArrayList<>();
+        File file = new File (dirPath + File.separator + fileName);
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        String sr;
+        while((sr = br.readLine())!= null){
+            items.add(sr);
+        }
+        br.close();
+
+        return items;
+    }
+
     public static List<String> deleteCartItem(List<String> cartItems, String input) {
 
         String strValue = "";
@@ -141,6 +177,23 @@ public final class App {
             }
         }
         return cartItems;
+    }
+
+    public static void updateCartItemToFIle(List<String> cartItems, String dirPath, String fileName) throws IOException{
+        FileWriter fw = new FileWriter(dirPath + File.separator + fileName, false);
+        BufferedWriter bw = new BufferedWriter(fw);
+
+        int listCount = 0;
+        while(listCount < cartItems.size()){
+            bw.write(cartItems.get(listCount));
+            bw.newLine();
+            listCount++;
+        }
+
+        bw.flush();
+        fw.flush();
+        bw.close();
+        fw.close();
     }
 
     public static void listUsers(String dirPath) {
